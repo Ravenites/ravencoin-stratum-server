@@ -7,9 +7,7 @@ import { BlockTemplate } from './block-template';
 import { DaemonInterface } from './daemon';
 import { ExtraNonceCounter } from './nonce';
 import { JobCounter } from './job-counter';
-import { Kawpowhash } from './types/daemon';
-import { PoolOptions } from './types/pool';
-import { RpcData } from './types/common';
+import { Kawpowhash, PoolOptions, RpcData } from './types';
 import { reverseBuffer, sha256d } from './utils';
 
 export class JobManager extends EventEmitter {

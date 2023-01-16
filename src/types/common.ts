@@ -10,5 +10,5 @@ export type RpcData = {
   rewardToPool: number;
   target: string;
   transactions: any[];
-  [string]: any;
+  [x: string]: any;
 };

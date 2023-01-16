@@ -5,14 +5,14 @@ import { DaemonInterface } from './daemon';
 import { JobManager } from './job-manager';
 import { StratumClient } from './stratum/client';
 import { StratumServer } from './stratum/server';
-import { RpcData } from './types/common';
 import {
+  AuthorizeFn,
   Config,
   PoolOptions,
   Recipient,
   RelinquishMinersStratumClient,
-} from './types/pool';
-import { AuthorizeFn } from './types/stratum';
+  RpcData,
+} from './types';
 import { addressToScript, getReadableHashRateString } from './utils';
 import { VarDiff, VarDiffOptions } from './var-diff';
 

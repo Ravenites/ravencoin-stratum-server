@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 import net from 'net';
 import tls from 'tls';
-import { AuthorizeFn, Banning, JobParams } from '../types/stratum';
+import { AuthorizeFn, Banning, JobParams } from '../types';
 import { algos } from '../algo-properties';
 
 type Options = {

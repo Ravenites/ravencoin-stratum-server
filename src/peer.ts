@@ -1,8 +1,8 @@
 import { EventEmitter } from 'events';
 import crypto from 'crypto';
 import net from 'net';
-import { StratumError } from './types/error';
 import { PoolOptions } from './pool';
+import { StratumError } from './types';
 import { varStringBuffer, packUInt32LE, packInt64LE, sha256d } from './utils';
 
 type InvCodes = {

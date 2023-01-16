@@ -1,10 +1,9 @@
 import { EventEmitter } from 'events';
 import net from 'net';
 import tls from 'tls';
+import { AuthorizeFn, JobParams, PoolOptions } from '../types';
 import { StratumClient } from './client';
 import { SubscriptionCounter } from './common';
-import { AuthorizeFn, JobParams } from '../types/stratum';
-import { PoolOptions } from '../types/pool';
 
 let TLSoptions: any;
 

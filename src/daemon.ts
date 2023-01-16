@@ -1,7 +1,6 @@
 import { EventEmitter } from 'events';
 import http from 'http';
-import { CmdReturnObj, Daemon as DaemonCommon } from './types/daemon';
-import { StratumError } from './types/error';
+import { CmdReturnObj, Daemon as DaemonCommon, StratumError } from './types';
 
 type Daemon = DaemonCommon & {
   index?: number;

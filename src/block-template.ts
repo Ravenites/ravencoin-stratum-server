@@ -1,10 +1,9 @@
 import BigNumber from 'bignumber.js';
 import { SHA3 } from 'sha3';
-import { diff1 } from './algo-properties';
-import { getRoot } from './merkle-tree';
+import { algos, diff1 } from './algo-properties';
 import { createGeneration, getFees } from './transactions';
-import { RpcData } from './types/common';
-import { JobParams } from './types/stratum';
+import { getRoot } from './merkle-tree';
+import { JobParams, RpcData } from './types';
 import { packUInt32BE, reverseBuffer, sha256d, varIntBuffer } from './utils';
 
 const EPOCH_LENGTH = 7500;

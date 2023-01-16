@@ -1,6 +1,5 @@
 import bitcoin from 'bitcoinjs-lib';
-import { RpcData } from './types/common';
-import { CreateGeneration } from './types/transactions';
+import { CreateGeneration, RpcData } from './types';
 import { reverseBuffer } from './utils';
 
 function scriptCompile(addrHash: Buffer): Buffer {

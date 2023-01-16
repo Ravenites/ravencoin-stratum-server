@@ -1,6 +1,6 @@
 import tls from 'tls';
 import { StratumClient } from '../stratum/client';
-import { Daemon } from './common';
+import { Daemon } from './';
 import { Banning } from './stratum';
 
 export type Config = {
