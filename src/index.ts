@@ -1,6 +1,7 @@
 import { Pool } from './pool';
 import { AuthorizeFn, Config } from './types';
 
+export * from './algo-properties';
 export * from './daemon';
 export * from './types';
 export * from './var-diff';
