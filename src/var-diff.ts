@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { StratumClient } from './stratum/client';
+import { StratumClient } from './stratum';
 
 export class RingBuffer {
   data: number[] = [];

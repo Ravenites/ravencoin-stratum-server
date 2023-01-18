@@ -1,5 +1,5 @@
 import tls from 'tls';
-import { StratumClient } from '../stratum/client';
+import { StratumClient } from '../stratum';
 import { Daemon } from './';
 import { Banning } from './stratum';
 

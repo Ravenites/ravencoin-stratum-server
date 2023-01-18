@@ -3,8 +3,7 @@ import { EventEmitter } from 'events';
 import { algos } from './algo-properties';
 import { DaemonInterface } from './daemon';
 import { JobManager } from './job-manager';
-import { StratumClient } from './stratum/client';
-import { StratumServer } from './stratum/server';
+import { StratumClient, StratumServer } from './stratum';
 import {
   AuthorizeFn,
   Config,

@@ -10,6 +10,7 @@ export * from './merkle-tree';
 export * from './nonce';
 export * from './peer';
 export * from './pool';
+export * from './stratum';
 export * from './transactions';
 export * from './types';
 export * from './utils';
