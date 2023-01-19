@@ -30,7 +30,7 @@ export async function getRoot(
   const hashes = [
     reverseBuffer(Buffer.from(generateTxRaw, 'hex')).toString('hex'),
   ];
-  rpcData.transactions.forEach(function(value) {
+  rpcData.transactions.forEach(value => {
     if (value.txid !== undefined) {
       hashes.push(value.txid);
     } else {

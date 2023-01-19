@@ -458,6 +458,7 @@ export class Pool extends EventEmitter {
   }
 
   startStratumServer(finishedCallback: any) {
+    const _this = this;
     this.stratumServer = new StratumServer(this._options, this._authorizeFn);
 
     this.stratumServer
@@ -497,20 +498,20 @@ export class Pool extends EventEmitter {
             params,
             resultCallback: any
           ) {
-            let extraNonce = this.jobManager!.extraNonceCounter.next();
+            let extraNonce = _this.jobManager!.extraNonceCounter.next();
             resultCallback(null, extraNonce, extraNonce);
             if (
-              typeof this._options.ports[client.socket.localPort] !==
+              typeof _this._options.ports[client.socket.localPort] !==
                 'undefined' &&
-              this._options.ports[client.socket.localPort].diff
+              _this._options.ports[client.socket.localPort].diff
             ) {
               this.sendDifficulty(
-                this._options.ports[client.socket.localPort].diff
+                _this._options.ports[client.socket.localPort].diff
               );
             } else {
               this.sendDifficulty(8);
             }
-            this.sendMiningJob(this.jobManager!.currentJob!.getJobParams());
+            this.sendMiningJob(_this.jobManager!.currentJob!.getJobParams());
           })
           .on(
             'authorization',
@@ -653,7 +654,7 @@ export class Pool extends EventEmitter {
             result
           );
           callback(null, result, processedNewBlock);
-          callback = function() {};
+          callback = () => {};
         }
       },
       true
@@ -730,7 +731,7 @@ export class Pool extends EventEmitter {
       this.varDiff[port].removeAllListeners();
     }
     this.varDiff[port] = new VarDiff(port, varDiffConfig);
-    this.varDiff[port].on('newDifficulty', function(client, newDiff) {
+    this.varDiff[port].on('newDifficulty', (client, newDiff) => {
       client.enqueueNextDifficulty(newDiff);
     });
   }

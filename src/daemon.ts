@@ -90,15 +90,15 @@ export class DaemonInterface extends EventEmitter {
     const req = http.request(options, res => {
       let data = '';
       res.setEncoding('utf8');
-      res.on('data', function(chunk) {
+      res.on('data', chunk => {
         data += chunk;
       });
-      res.on('end', function() {
+      res.on('end', () => {
         parseJson(res, data);
       });
     });
 
-    req.on('error', function(e: StratumError) {
+    req.on('error', (e: StratumError) => {
       if (e.code === 'ECONNREFUSED') {
         callback({ type: 'offline', message: e.message }, null);
       } else {

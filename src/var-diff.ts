@@ -26,9 +26,7 @@ export class RingBuffer {
   }
 
   avg(): number {
-    const sum = this.data.reduce(function(a, b) {
-      return a + b;
-    });
+    const sum = this.data.reduce((a, b) => a + b);
     return sum / (this.isFull ? this.maxSize : this.cursor);
   }
 
@@ -86,7 +84,7 @@ export class VarDiff extends EventEmitter {
     let lastTimeStamp: number;
     let lastRtc: number;
     let timeBuffer: RingBuffer;
-    client.on('submit', function() {
+    client.on('submit', () => {
       let ts = (Date.now() / 1000) | 0;
       if (!lastRtc) {
         lastRtc = ts - _this.varDiffOptions.retargetTime / 2;
