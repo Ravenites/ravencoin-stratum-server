@@ -29,12 +29,12 @@ type HandleAuthorize = {
 
 export class StratumClient extends EventEmitter {
   authorized: boolean = false;
-  difficulty: number = 0;
+  difficulty: number = 8;
   extraNonce1: string | null = null;
   lastActivity: number = Date.now();
   private _options: Options;
-  pendingDifficulty: number | null = 0;
-  previousDifficulty: number | null = 0;
+  pendingDifficulty: number | null = null;
+  previousDifficulty: number | null = null;
   remoteAddress: string;
   requestedSubscriptionBeforeAuth: boolean = false;
   socket: tls.TLSSocket | net.Socket;
@@ -89,7 +89,6 @@ export class StratumClient extends EventEmitter {
   }
 
   handleMessage(message: any) {
-    console.log('message', message);
     switch (message.method) {
       case 'mining.subscribe':
         this.handleSubscribe(message);
@@ -130,9 +129,6 @@ export class StratumClient extends EventEmitter {
       {},
       // @ts-ignore
       (error: Error, extraNonce0?: string, extraNonce1: string) => {
-        console.log('error', error);
-        console.log('extraNonce0', extraNonce0);
-        console.log('extraNonce1', extraNonce1);
         if (error) {
           this.sendJson({
             id: message.id,
@@ -285,7 +281,6 @@ export class StratumClient extends EventEmitter {
             return;
           }
           if (messageJson) {
-            console.log('messageJson', messageJson);
             this.handleMessage(messageJson);
           }
         });
@@ -354,13 +349,11 @@ export class StratumClient extends EventEmitter {
     let powLimit = algos.kawpow.diff;
     let adjPow = powLimit / this.difficulty;
     let zeroPad = '';
-
     if (64 - adjPow.toString(16).length !== 0) {
       zeroPad = '0';
       zeroPad = zeroPad.repeat(64 - adjPow.toString(16).length);
     }
     personal_jobParams[3] = (zeroPad + adjPow.toString(16)).substr(0, 64);
-
     this.sendJson({
       id: null,
       method: 'mining.notify',

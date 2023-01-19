@@ -374,10 +374,10 @@ export class JobManager extends EventEmitter {
           job.target_hex,
         ],
         (results: Kawpowhash) => {
-          let digest = results.response.digest;
-          let result = results.response.result;
-          let mix_hash = results.response.mix_hash;
-          // let meets_target = results.response.meets_target;
+          let digest = results.digest;
+          let result = results.result;
+          let mix_hash = results.mix_hash;
+          // let meets_target = results.meets_target;
           let blockHex: string;
           let blockHash: string;
 

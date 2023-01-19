@@ -6,10 +6,8 @@ export type Daemon = {
 };
 
 export type Kawpowhash = {
-  response: {
-    digest: string;
-    result: string;
-    mix_hash: string;
-    meets_target: boolean;
-  };
+  digest: string;
+  result: string;
+  mix_hash: string;
+  meets_target: boolean;
 };
