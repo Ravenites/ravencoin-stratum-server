@@ -492,27 +492,31 @@ export class Pool extends EventEmitter {
           .on('difficultyChanged', (diff: number) => {
             this.emit('difficultyUpdate', client.workerName, diff);
           })
-          .on('subscription', function(
-            this: typeof client,
-            // @ts-ignore
-            params,
-            resultCallback: any
-          ) {
-            let extraNonce = _this.jobManager!.extraNonceCounter.next();
-            resultCallback(null, extraNonce, extraNonce);
-            if (
-              typeof _this._options.ports[client.socket.localPort] !==
-                'undefined' &&
-              _this._options.ports[client.socket.localPort].diff
-            ) {
-              this.sendDifficulty(
+          .on(
+            'subscription',
+            (
+              // @ts-ignore
+              params,
+              resultCallback: any
+            ) => {
+              let extraNonce = _this.jobManager!.extraNonceCounter.next();
+              resultCallback(null, extraNonce, extraNonce);
+              if (
+                typeof _this._options.ports[client.socket.localPort] !==
+                  'undefined' &&
                 _this._options.ports[client.socket.localPort].diff
+              ) {
+                client.sendDifficulty(
+                  _this._options.ports[client.socket.localPort].diff
+                );
+              } else {
+                client.sendDifficulty(8);
+              }
+              client.sendMiningJob(
+                _this.jobManager!.currentJob!.getJobParams()
               );
-            } else {
-              this.sendDifficulty(8);
             }
-            this.sendMiningJob(_this.jobManager!.currentJob!.getJobParams());
-          })
+          )
           .on(
             'authorization',
             (

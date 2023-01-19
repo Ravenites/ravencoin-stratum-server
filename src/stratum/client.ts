@@ -43,8 +43,8 @@ export class StratumClient extends EventEmitter {
     invalid: 0,
   };
   version: string | number | null = null;
-  workerName?: string;
-  workerPass?: string;
+  workerName: string = '';
+  workerPass: string = '';
 
   constructor(options: Options) {
     super();
@@ -89,6 +89,7 @@ export class StratumClient extends EventEmitter {
   }
 
   handleMessage(message: any) {
+    console.log('message', message);
     switch (message.method) {
       case 'mining.subscribe':
         this.handleSubscribe(message);
@@ -129,6 +130,9 @@ export class StratumClient extends EventEmitter {
       {},
       // @ts-ignore
       (error: Error, extraNonce0?: string, extraNonce1: string) => {
+        console.log('error', error);
+        console.log('extraNonce0', extraNonce0);
+        console.log('extraNonce1', extraNonce1);
         if (error) {
           this.sendJson({
             id: message.id,
@@ -165,7 +169,7 @@ export class StratumClient extends EventEmitter {
   handleAuthorize(message: HandleAuthorize) {
     this.workerName = this.getSafeWorkerString(message.params[0]);
     this.workerPass = message.params[1];
-    var publicAddress = this.workerName.split('.')[0];
+    const publicAddress = this.workerName.split('.')[0];
     this._options.authorizeFn(
       this.remoteAddress,
       this.socket.localPort,
@@ -229,17 +233,16 @@ export class StratumClient extends EventEmitter {
     );
   }
 
-  sendJson(args?: any) {
+  sendJson(...params: any) {
     let response = '';
-    for (let i = 0; i < args.length; i++) {
-      response += JSON.stringify(args[i]) + '\n';
+    for (let i = 0; i < params.length; i++) {
+      response += JSON.stringify(params[i]) + '\n';
     }
     this.socket.write(response);
   }
 
   setupSocket(): void {
     let dataBuffer = '';
-    // let _this = this;
 
     this.socket.setEncoding('utf8');
     if (this._options.tcpProxyProtocol === true) {
@@ -282,6 +285,7 @@ export class StratumClient extends EventEmitter {
             return;
           }
           if (messageJson) {
+            console.log('messageJson', messageJson);
             this.handleMessage(messageJson);
           }
         });
