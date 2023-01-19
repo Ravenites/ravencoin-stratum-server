@@ -39,19 +39,19 @@ export function createGeneration(
 
   const length = '0' + height;
   let serializedBlockHeight = Buffer.concat([
-    new Buffer(length, 'hex'),
-    reverseBuffer(new Buffer(blockHeightSerial, 'hex')),
-    new Buffer('00', 'hex'), // OP_0
+    Buffer.from(length, 'hex'),
+    reverseBuffer(Buffer.from(blockHeightSerial, 'hex')),
+    Buffer.from('00', 'hex'), // OP_0
   ]);
   tx.addInput(
-    new Buffer(
+    Buffer.from(
       '0000000000000000000000000000000000000000000000000000000000000000',
       'hex'
     ),
     0xffffffff,
     0xffffffff,
     // https://github.com/RavenCommunity/kawpow-stratum-pool/commit/f59b1e2c0485804782fea99c024a29fde666e648
-    Buffer.concat([serializedBlockHeight, new Buffer('6b6177706f77', 'hex')])
+    Buffer.concat([serializedBlockHeight, Buffer.from('6b6177706f77', 'hex')])
   );
   let feePercent = 0;
   for (let i = 0; i < recipients.length; i++) {
@@ -68,7 +68,7 @@ export function createGeneration(
     );
   }
   if (rpcData.default_witness_commitment !== undefined) {
-    tx.addOutput(new Buffer(rpcData.default_witness_commitment, 'hex'), 0);
+    tx.addOutput(Buffer.from(rpcData.default_witness_commitment, 'hex'), 0);
   }
 
   const txHex = tx.toHex();

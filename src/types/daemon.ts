@@ -13,10 +13,3 @@ export type Kawpowhash = {
     meets_target: boolean;
   };
 };
-
-export type CmdReturnObj = {
-  error: any;
-  response: any;
-  instance: Daemon;
-  data?: any;
-};

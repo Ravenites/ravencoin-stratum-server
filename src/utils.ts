@@ -10,10 +10,10 @@ export function addressFromEx(
     let versionByte: Buffer = getVersionByte(exAddress);
     let addrBase: Buffer = Buffer.concat([
       versionByte,
-      new Buffer(ripdm160Key, 'hex'),
+      Buffer.from(ripdm160Key, 'hex'),
     ]);
     let checksum: Buffer = sha256d(addrBase).slice(0, 4);
-    let address: Buffer = Buffer.concat([addrBase, new Buffer(checksum)]);
+    let address: Buffer = Buffer.concat([addrBase, Buffer.from(checksum)]);
     return base58.encode(address);
   } catch (e) {
     return null;
@@ -35,15 +35,18 @@ export function sha256d(buff: Buffer): Buffer {
 }
 
 export function reverseBuffer(buff: Buffer): Buffer {
-  const reversed = new Buffer(buff.length);
-  for (let i = buff.length - 1; i >= 0; i++) {
-    reversed[buff.length - i - 1] = buff[i];
+  let buffer = Buffer.alloc(buff.length);
+
+  for (let i = 0, j = buff.length - 1; i <= j; ++i, --j) {
+    buffer[i] = buff[j];
+    buffer[j] = buff[i];
   }
-  return reversed;
+
+  return buffer;
 }
 
 export function reverseHex(hex: string): string {
-  return reverseBuffer(new Buffer(hex, 'hex')).toString('hex');
+  return reverseBuffer(Buffer.from(hex, 'hex')).toString('hex');
 }
 
 export function reverseByteOrder(buff: Buffer): Buffer {
@@ -54,9 +57,9 @@ export function reverseByteOrder(buff: Buffer): Buffer {
 }
 
 export function uint256BufferFromHash(hex: string): Buffer {
-  let fromHex = new Buffer(hex, 'hex');
+  let fromHex = Buffer.from(hex, 'hex');
   if (fromHex.length !== 32) {
-    const empty = new Buffer(32);
+    const empty = Buffer.alloc(32);
     empty.fill(0);
     fromHex.copy(empty);
     fromHex = empty;
@@ -70,35 +73,35 @@ export function hexFromReversedBuffer(buff: Buffer): string {
 
 export function varIntBuffer(n: number): Buffer {
   if (n < 0xfd) {
-    return new Buffer([n]);
+    return Buffer.from([n]);
   } else if (n <= 0xffff) {
-    const buff = new Buffer(3);
+    const buff = Buffer.alloc(3);
     buff[0] = 0xfd;
     buff.writeUInt16LE(n, 1);
     return buff;
   } else if (n <= 0xffffffff) {
-    const buff = new Buffer(5);
+    const buff = Buffer.alloc(5);
     buff[0] = 0xfe;
     buff.writeUInt32LE(n, 1);
     return buff;
   }
-  const buff = new Buffer(9);
+  const buff = Buffer.alloc(9);
   buff[0] = 0xff;
   exports.packUInt16LE(n).copy(buff, 1);
   return buff;
 }
 
 export function varStringBuffer(str: string): Buffer {
-  let strBuff = new Buffer(str);
+  let strBuff = Buffer.from(str);
   return Buffer.concat([varIntBuffer(strBuff.length), strBuff]);
 }
 
 export function serializeNumber(n: number): Buffer {
   if (n >= 1 && n <= 16) {
-    return new Buffer([0x50 + n]);
+    return Buffer.from([0x50 + n]);
   }
   let l = 1;
-  let buff = new Buffer(9);
+  let buff = Buffer.alloc(9);
   while (n > 0x7f) {
     buff.writeUInt8(n & 0xff, l++);
     n >>= 8;
@@ -110,60 +113,60 @@ export function serializeNumber(n: number): Buffer {
 
 export function serializeString(s: string): Buffer {
   if (s.length < 253) {
-    return Buffer.concat([new Buffer([s.length]), new Buffer(s)]);
+    return Buffer.concat([Buffer.from([s.length]), Buffer.from(s)]);
   } else if (s.length < 0x10000) {
     return Buffer.concat([
-      new Buffer([253]),
+      Buffer.from([253]),
       exports.packUInt16LE(s.length),
-      new Buffer(s),
+      Buffer.from(s),
     ]);
   } else if (s.length < 0x100000000) {
     return Buffer.concat([
-      new Buffer([254]),
+      Buffer.from([254]),
       exports.packUInt32LE(s.length),
-      new Buffer(s),
+      Buffer.from(s),
     ]);
   }
 
   return Buffer.concat([
-    new Buffer([255]),
+    Buffer.from([255]),
     exports.packUInt16LE(s.length),
-    new Buffer(s),
+    Buffer.from(s),
   ]);
 }
 
 export function packUInt16LE(num: number): Buffer {
-  let buff = new Buffer(2);
+  let buff = Buffer.alloc(2);
   buff.writeUInt16LE(num, 0);
   return buff;
 }
 
 export function packInt32LE(num: number): Buffer {
-  let buff = new Buffer(4);
+  let buff = Buffer.alloc(4);
   buff.writeInt32LE(num, 0);
   return buff;
 }
 
 export function packInt32BE(num: number): Buffer {
-  let buff = new Buffer(4);
+  let buff = Buffer.alloc(4);
   buff.writeInt32BE(num, 0);
   return buff;
 }
 
 export function packUInt32LE(num: number): Buffer {
-  let buff = new Buffer(4);
+  let buff = Buffer.alloc(4);
   buff.writeUInt32LE(num, 0);
   return buff;
 }
 
 export function packUInt32BE(num: number): Buffer {
-  let buff = new Buffer(4);
+  let buff = Buffer.alloc(4);
   buff.writeUInt32BE(num, 0);
   return buff;
 }
 
 export function packInt64LE(num: number): Buffer {
-  let buff = new Buffer(8);
+  let buff = Buffer.alloc(8);
   buff.writeUInt32LE(num % Math.pow(2, 32), 0);
   buff.writeUInt32LE(Math.floor(num / Math.pow(2, 32)), 4);
   return buff;
@@ -192,19 +195,19 @@ export function pubkeyToScript(key: string): Buffer {
     console.error('Invalid pubkey: ' + key);
     throw new Error();
   }
-  let pubkey = new Buffer(35);
+  let pubkey = Buffer.alloc(35);
   pubkey[0] = 0x21;
   pubkey[34] = 0xac;
-  new Buffer(key, 'hex').copy(pubkey, 1);
+  Buffer.from(key, 'hex').copy(pubkey, 1);
   return pubkey;
 }
 
 export function miningKeyToScript(key: string): Buffer {
-  let keyBuffer = new Buffer(key, 'hex');
+  let keyBuffer = Buffer.from(key, 'hex');
   return Buffer.concat([
-    new Buffer([0x76, 0xa9, 0x14]),
+    Buffer.from([0x76, 0xa9, 0x14]),
     keyBuffer,
-    new Buffer([0x88, 0xac]),
+    Buffer.from([0x88, 0xac]),
   ]);
 }
 
@@ -220,9 +223,9 @@ export function addressToScript(addr: string): Buffer | void {
   }
   const pubkey = decoded.slice(1, -4);
   return Buffer.concat([
-    new Buffer([0x76, 0xa9, 0x14]),
+    Buffer.from([0x76, 0xa9, 0x14]),
     pubkey,
-    new Buffer([0x88, 0xac]),
+    Buffer.from([0x88, 0xac]),
   ]);
 }
 
@@ -255,15 +258,17 @@ export function shiftMax256Right(shiftRight: number): Buffer {
       octets[i] += bits[f] * multiplier;
     }
   }
-  return new Buffer(octets);
+  return Buffer.from(octets);
 }
 
 export function bufferToCompactBits(startingBuff: Buffer): Buffer {
   let bigNum: number = startingBuff.readInt32BE(0);
   let buff = Buffer.from([bigNum]);
   buff =
-    buff.readUInt8(0) > 0x7f ? Buffer.concat([new Buffer([0x00]), buff]) : buff;
-  buff = Buffer.concat([new Buffer([buff.length]), buff]);
+    buff.readUInt8(0) > 0x7f
+      ? Buffer.concat([Buffer.from([0x00]), buff])
+      : buff;
+  buff = Buffer.concat([Buffer.from([buff.length]), buff]);
   return buff.slice(0, 4);
 }
 
@@ -277,14 +282,14 @@ export function bignumFromBitsBuffer(bitsBuff: Buffer): BigNumber {
 }
 
 export function bignumFromBitsHex(bitsString: string): BigNumber {
-  let bitsBuff = new Buffer(bitsString, 'hex');
+  let bitsBuff = Buffer.from(bitsString, 'hex');
   return bignumFromBitsBuffer(bitsBuff);
 }
 
 export function convertBitsToBuff(bitsBuff: Buffer): Buffer {
   let target = bignumFromBitsBuffer(bitsBuff);
   let resultBuff = Buffer.from(target);
-  let buff256 = new Buffer(32);
+  let buff256 = Buffer.alloc(32);
   buff256.fill(0);
   resultBuff.copy(buff256, buff256.length - resultBuff.length);
   return buff256;

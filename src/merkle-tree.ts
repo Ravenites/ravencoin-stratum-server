@@ -28,7 +28,7 @@ export async function getRoot(
   generateTxRaw: string
 ): Promise<string> {
   const hashes = [
-    reverseBuffer(new Buffer(generateTxRaw, 'hex')).toString('hex'),
+    reverseBuffer(Buffer.from(generateTxRaw, 'hex')).toString('hex'),
   ];
   rpcData.transactions.forEach(function(value) {
     if (value.txid !== undefined) {

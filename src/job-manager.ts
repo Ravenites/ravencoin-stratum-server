@@ -102,7 +102,7 @@ export class JobManager extends EventEmitter {
     return true;
   }
 
-  updateCurrentJob(rpcData: RpcData): void {
+  async updateCurrentJob(rpcData: RpcData) {
     const tmpBlockTemplate = new BlockTemplate(
       this.jobCounter.next(),
       rpcData,
@@ -111,12 +111,14 @@ export class JobManager extends EventEmitter {
       this._options.address
     );
 
+    await tmpBlockTemplate.getRoot();
+
     this.currentJob = tmpBlockTemplate;
     this.emit('updatedBlock', tmpBlockTemplate, true);
     this.validJobs[tmpBlockTemplate.jobId] = tmpBlockTemplate;
   }
 
-  processTemplate(rpcData: RpcData): boolean {
+  async processTemplate(rpcData: RpcData): Promise<boolean> {
     let isNewBlock = typeof this.currentJob === 'undefined';
 
     if (
@@ -140,6 +142,8 @@ export class JobManager extends EventEmitter {
       this._options.recipients,
       this._options.address
     );
+
+    await tmpBlockTemplate.getRoot();
 
     this.currentJob = tmpBlockTemplate;
     this.validJobs = {};
@@ -303,9 +307,9 @@ export class JobManager extends EventEmitter {
                 if (body.block === true) {
                   blockHex = job
                     .serializeBlock(
-                      new Buffer(header_hash, 'hex'),
-                      new Buffer(miner_given_nonce, 'hex'),
-                      new Buffer(miner_given_mixhash, 'hex')
+                      Buffer.from(header_hash, 'hex'),
+                      Buffer.from(miner_given_nonce, 'hex'),
+                      Buffer.from(miner_given_mixhash, 'hex')
                     )
                     .toString('hex');
                   blockHash = body.digest;
@@ -369,11 +373,11 @@ export class JobManager extends EventEmitter {
           job.rpcData.height,
           job.target_hex,
         ],
-        (results: Kawpowhash[]) => {
-          let digest = results[0].response.digest;
-          let result = results[0].response.result;
-          let mix_hash = results[0].response.mix_hash;
-          // let meets_target = results[0].response.meets_target;
+        (results: Kawpowhash) => {
+          let digest = results.response.digest;
+          let result = results.response.result;
+          let mix_hash = results.response.mix_hash;
+          // let meets_target = results.response.meets_target;
           let blockHex: string;
           let blockHash: string;
 
@@ -388,9 +392,9 @@ export class JobManager extends EventEmitter {
             if (job.target.isGreaterThan(headerBigNum)) {
               blockHex = job
                 .serializeBlock(
-                  new Buffer(header_hash, 'hex'),
-                  new Buffer(miner_given_nonce, 'hex'),
-                  new Buffer(mix_hash, 'hex')
+                  Buffer.from(header_hash, 'hex'),
+                  Buffer.from(miner_given_nonce, 'hex'),
+                  Buffer.from(mix_hash, 'hex')
                 )
                 .toString('hex');
               blockHash = digest;

@@ -30,7 +30,7 @@ export class BlockTemplate {
   localTarget: string;
   seedhash: string;
   epoch_number: number;
-  header_hash: string;
+  header_hash?: string;
 
   constructor(
     jobId: string,
@@ -67,14 +67,15 @@ export class BlockTemplate {
         recipients,
         poolAddress
       );
+
       this.genTx = createTx.txHex;
       this.genTxHash = createTx.txHash;
     }
 
     this.prevHashReversed = reverseBuffer(
-      new Buffer(this.rpcData.previousblockhash, 'hex')
+      Buffer.from(this.rpcData.previousblockhash, 'hex')
     ).toString('hex');
-    this.getRoot();
+
     this.txCount = this.rpcData.transactions.length + 1; // add total txs and new coinbase
 
     const powLimit = algos.kawpow.diff;
@@ -88,7 +89,7 @@ export class BlockTemplate {
 
     this.localTarget = (zeroPad + adjPow.toString(16)).substr(0, 64);
     let d = new SHA3.SHA3Hash(256);
-    let seedhash_buf = new Buffer(32);
+    let seedhash_buf = Buffer.alloc(32);
     this.seedhash = seedhash_buf.toString('hex');
 
     this.epoch_number = Math.floor(this.rpcData.height / EPOCH_LENGTH);
@@ -100,9 +101,6 @@ export class BlockTemplate {
       this.seedhash = d.digest('hex');
     }
 
-    const header_hash = this.serializeHeader();
-    this.header_hash = reverseBuffer(sha256d(header_hash)).toString('hex');
-
     let override_target = 0;
     if (override_target !== 0 && adjPow > override_target) {
       zeroPad = '0';
@@ -111,19 +109,20 @@ export class BlockTemplate {
     }
   }
 
-  async init() {
-    await this.getRoot();
-  }
-
   async getRoot() {
-    this.merkleRoot = await getRoot(this.rpcData, this.genTxHash!);
-    this.merkleRootReversed = reverseBuffer(
-      new Buffer(this.merkleRoot, 'hex')
-    ).toString('hex');
+    await getRoot(this.rpcData, this.genTxHash!).then(res => {
+      this.merkleRoot = res;
+      this.merkleRootReversed = reverseBuffer(
+        Buffer.from(this.merkleRoot, 'hex')
+      ).toString('hex');
+    });
+
+    const header_hash = this.serializeHeader();
+    this.header_hash = reverseBuffer(sha256d(header_hash)).toString('hex');
   }
 
   serializeHeader(): Buffer {
-    let header = new Buffer(80);
+    let header = Buffer.alloc(80);
     let position = 0;
     header.write(
       packUInt32BE(this.rpcData.height).toString('hex'),
@@ -131,6 +130,7 @@ export class BlockTemplate {
       4,
       'hex'
     );
+
     header.write(this.rpcData.bits, (position += 4), 4, 'hex');
     header.write(this.nTime, (position += 4), 4, 'hex');
     header.write(this.merkleRoot!, (position += 4), 32, 'hex');
@@ -148,18 +148,18 @@ export class BlockTemplate {
     mixhash: Buffer
   ): Buffer {
     let header = this.serializeHeader();
-    let foo = new Buffer(40);
+    let foo = Buffer.alloc(40);
     foo.write(reverseBuffer(nonce).toString('hex'), 0, 8, 'hex');
     foo.write(reverseBuffer(mixhash).toString('hex'), 8, 32, 'hex');
     let buf = Buffer.concat([
       header,
       foo,
       varIntBuffer(this.rpcData.transactions.length + 1),
-      new Buffer(this.genTx!, 'hex'),
+      Buffer.from(this.genTx!, 'hex'),
     ]);
     if (this.rpcData.transactions.length > 0) {
       this.rpcData.transactions.forEach((value: any) => {
-        const tmpBuf = Buffer.concat([buf, new Buffer(value.data, 'hex')]);
+        const tmpBuf = Buffer.concat([buf, Buffer.from(value.data, 'hex')]);
         buf = tmpBuf;
       });
     }
@@ -179,7 +179,7 @@ export class BlockTemplate {
     if (!this.jobParams) {
       this.jobParams = [
         this.jobId,
-        this.header_hash,
+        this.header_hash!,
         this.seedhash,
         this.localTarget,
         true,

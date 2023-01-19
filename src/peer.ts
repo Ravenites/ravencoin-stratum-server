@@ -30,13 +30,13 @@ export class Peer extends EventEmitter {
     tx: 1,
     block: 2,
   };
-  networkServices: Buffer = new Buffer('0100000000000000', 'hex'); // //NODE_NETWORK services (value 1 packed as uint64)
-  emptyNetAddress: Buffer = new Buffer(
+  networkServices: Buffer = Buffer.from('0100000000000000', 'hex'); // //NODE_NETWORK services (value 1 packed as uint64)
+  emptyNetAddress: Buffer = Buffer.from(
     '010000000000000000000000000000000000ffff000000000000',
     'hex'
   );
   userAgent: Buffer = varStringBuffer('/node-stratum/');
-  blockStartHeight: Buffer = new Buffer('00000000', 'hex'); //block start_height, can be empty
+  blockStartHeight: Buffer = Buffer.from('00000000', 'hex'); //block start_height, can be empty
   relayTransactions: Buffer;
   commands: Commands;
 
@@ -44,7 +44,7 @@ export class Peer extends EventEmitter {
     super();
 
     this._options = options;
-    this.magic = new Buffer(
+    this.magic = Buffer.from(
       options.testnet
         ? options.coin.peerMagicTestnet!
         : options.coin.peerMagic!,
@@ -54,8 +54,8 @@ export class Peer extends EventEmitter {
 
     this.relayTransactions =
       options?.p2p?.disableTransactions === true
-        ? new Buffer([false])
-        : new Buffer([]);
+        ? Buffer.from([0])
+        : Buffer.from([]);
 
     this.commands = {
       version: this.commandStringBuffer('version'),
@@ -151,7 +151,7 @@ export class Peer extends EventEmitter {
             if (header.readUInt32LE(0) === this.magicInt) {
               beginReadingMessage(header);
             } else {
-              beginReadingMessage(new Buffer([]));
+              beginReadingMessage(Buffer.from([]));
             }
             return;
           }
@@ -225,7 +225,7 @@ export class Peer extends EventEmitter {
   }
 
   fixedLenStringBuffer(s: string, len: number): Buffer {
-    const buff = new Buffer(len);
+    const buff = Buffer.alloc(len);
     buff.fill(0);
     buff.write(s);
     return buff;
@@ -237,7 +237,7 @@ export class Peer extends EventEmitter {
     preRead: Buffer | any,
     callback: any
   ): void {
-    let buff = preRead ? preRead : new Buffer([]);
+    let buff = preRead ? preRead : Buffer.from([]);
 
     const readData = (data: Buffer) => {
       buff = Buffer.concat([buff, data]);
@@ -250,6 +250,6 @@ export class Peer extends EventEmitter {
       }
     };
 
-    readData(new Buffer([]));
+    readData(Buffer.from([]));
   }
 }

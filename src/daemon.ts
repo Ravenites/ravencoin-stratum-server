@@ -1,6 +1,7 @@
+import { Client } from '@hyperbitjs/rpc';
 import { EventEmitter } from 'events';
 import http from 'http';
-import { CmdReturnObj, Daemon as DaemonCommon, StratumError } from './types';
+import { Daemon as DaemonCommon, StratumError } from './types';
 
 type Daemon = DaemonCommon & {
   index?: number;
@@ -31,7 +32,9 @@ export class DaemonInterface extends EventEmitter {
 
   isOnline(callback: (online: boolean) => void) {
     this.cmd('getinfo', [], (results: any) => {
-      const allOnline = results.every(() => !results.error);
+      const allOnline = Array.isArray(results)
+        ? results.every(x => !x.code)
+        : results.code !== 500;
       callback(allOnline);
       if (!allOnline) {
         this.emit('connectionFailed', results);
@@ -107,62 +110,61 @@ export class DaemonInterface extends EventEmitter {
   }
 
   batchCmd(cmdArray: any[], callback: any) {
-    var requestJson = [];
+    const promises = [];
+
+    const client = new Client({
+      url: `${this._daemons[0].host}:${this._daemons[0].port}`,
+      username: this._daemons[0].user,
+      password: this._daemons[0].password,
+    });
+
     for (var i = 0; i < cmdArray.length; i++) {
-      requestJson.push({
-        method: cmdArray[i][0],
-        params: cmdArray[i][1],
-        id: Date.now() + Math.floor(Math.random() * 10) + i,
-      });
+      const method = cmdArray[i][0];
+      const params = cmdArray[i][1];
+      promises.push(client.request(method, params));
     }
-    var serializedRequest = JSON.stringify(requestJson);
-    this.performHttpRequest(
-      this._daemons[0],
-      serializedRequest,
-      (error: string, result: any) => callback(error, result)
-    );
+
+    Promise.all(promises).then(res => {
+      callback(res);
+    });
   }
 
   cmd(
     method: string,
-    params: any[],
+    params: any,
     callback: any,
+    // @ts-ignore
     streamResults?: any,
+    // @ts-ignore
     returnRawData?: any
   ) {
-    const results: any[] = [];
-    this._daemons.forEach(async daemon => {
-      let itemFinished = function(error: any, result: any, data: any) {
-        const returnObj: CmdReturnObj = {
-          error: error,
-          response: (result || {}).result,
-          instance: daemon,
-        };
-        if (returnRawData) {
-          returnObj.data = data;
-        }
-        if (streamResults) {
-          callback(returnObj);
-        } else {
-          results.push(returnObj);
-          callback(results);
-        }
-        itemFinished = () => {};
-      };
-      var requestJson = JSON.stringify({
-        jsonrpc: '1.0',
-        method: method,
-        params: params,
-        id: Date.now() + Math.floor(Math.random() * 10),
+    if (this._daemons.length > 1) {
+      const results: any[] = [];
+      this._daemons.forEach(async daemon => {
+        const client = new Client({
+          url: `${daemon.host}:${daemon.port}`,
+          username: daemon.user,
+          password: daemon.password,
+        });
+        const res = await client.request(method, params);
+        results.push(res);
       });
-      this.performHttpRequest(
-        daemon,
-        requestJson,
-        (error: any, result: any, data: any) => {
-          itemFinished(error, result, data);
-        }
-      );
-    });
+      callback(results);
+    } else {
+      const client = new Client({
+        url: `${this._daemons[0].host}:${this._daemons[0].port}`,
+        username: this._daemons[0].user,
+        password: this._daemons[0].password,
+      });
+      client
+        .request(method, params)
+        .then((res: any) => {
+          callback(res);
+        })
+        .catch((err: any) => {
+          callback(err);
+        });
+    }
   }
 
   logger(severity: string, message: string) {

@@ -188,9 +188,9 @@ export class Pool extends EventEmitter {
           },
         ],
         (results: any) => {
-          let synced = results.every(function(r: any) {
-            return !r.error || r.error.code !== -10;
-          });
+          const synced = Array.isArray(results)
+            ? results.every(x => x.code !== 500 && x.code !== -10)
+            : results.code !== 500 && results.code !== -10;
           if (synced) {
             syncedCallback();
           } else {
@@ -216,11 +216,13 @@ export class Pool extends EventEmitter {
 
     const generateProgress = () => {
       this.daemon!.cmd('getinfo', [], (results: any) => {
-        let blockCount = results.sort((a: any, b: any) => {
-          return b.response.blocks - a.response.blocks;
-        })[0].response.blocks;
+        const res = Array.isArray(results) ? results : [results];
+        let blockCount = res.sort((a: any, b: any) => {
+          return b.blocks - a.blocks;
+        })[0].blocks;
         this.daemon!.cmd('getpeerinfo', [], (results: any) => {
-          let peers = results[0].response;
+          const res = Array.isArray(results) ? results : [results];
+          let peers = res[0];
           let totalBlocks = peers.sort((a: any, b: any) => {
             return b.startingheight - a.startingheight;
           })[0].startingheight;
@@ -374,32 +376,34 @@ export class Pool extends EventEmitter {
       ['getdifficulty', []],
       ['getinfo', []],
       ['getmininginfo', []],
-      ['submitblock', []],
+      ['submitblock', ['dummy']],
     ];
-    this.daemon!.batchCmd(batchRpcCalls, (error: any, results: any[]) => {
-      if (error || !results) {
+    this.daemon!.batchCmd(batchRpcCalls, (results: any[]) => {
+      if (!results) {
         this.emitErrorLog(
-          'Could not start pool, error with init batch RPC call: ' +
-            JSON.stringify(error)
+          'Could not start pool, error with init batch RPC call'
         );
         return;
       }
+
       const rpcResults: Record<string, any> = {};
+
       for (let i = 0; i < results.length; i++) {
         const rpcCall: any = batchRpcCalls[i][0];
-        const r = results[i];
-        rpcResults[rpcCall] = r.result || r.error;
-        if (rpcCall !== 'submitblock' && (r.error || !r.result)) {
+        rpcResults[rpcCall] = results[i];
+        if (rpcCall !== 'submitblock' && results[i].code === 500) {
+          console.log('Could not start pool, error with init RPC');
           this.emitErrorLog(
             'Could not start pool, error with init RPC ' +
               rpcCall +
               ' - ' +
-              JSON.stringify(r.error)
+              JSON.stringify(results[i].message)
           );
           return;
         }
       }
       if (!rpcResults.validateaddress.isvalid) {
+        console.log('Daemon reports address is not valid');
         this.emitErrorLog('Daemon reports address is not valid');
         return;
       }
@@ -415,6 +419,9 @@ export class Pool extends EventEmitter {
         this._options.coin.reward === 'POS' &&
         typeof rpcResults.validateaddress.pubkey === 'undefined'
       ) {
+        console.log(
+          'The address provided is not from the daemon wallet - this is required for POS coins.'
+        );
         this.emitErrorLog(
           'The address provided is not from the daemon wallet - this is required for POS coins.'
         );
@@ -434,7 +441,10 @@ export class Pool extends EventEmitter {
       };
       if (rpcResults.submitblock.message === 'Method not found') {
         this._options.hasSubmitMethod = false;
-      } else if (rpcResults.submitblock.code === -1) {
+      } else if (
+        rpcResults.submitblock.code === -1 ||
+        rpcResults.submitblock.message === 'Block decode failed'
+      ) {
         this._options.hasSubmitMethod = true;
       } else {
         this.emitErrorLog(
@@ -467,9 +477,9 @@ export class Pool extends EventEmitter {
             ' seconds - updating transactions & rebroadcasting work'
         );
         this.getBlockTemplate(
-          (error: any, rpcData: RpcData, processedBlock: boolean) => {
+          async (error: any, rpcData: RpcData, processedBlock: boolean) => {
             if (error || processedBlock) return;
-            this.jobManager!.updateCurrentJob(rpcData);
+            await this.jobManager!.updateCurrentJob(rpcData);
           }
         );
       })
@@ -627,21 +637,22 @@ export class Pool extends EventEmitter {
           rules: ['segwit'],
         },
       ],
-      (result: any) => {
-        if (result.error) {
-          this.emitLog('result.error = %s ' + result);
-          this.emitErrorLog(
-            'getblocktemplate call failed for daemon instance ' +
-              result.instance.index +
-              ' with error ' +
-              JSON.stringify(result.error)
-          );
-          callback(result.error);
+      async (result: any) => {
+        if (result.code === 500) {
+          this.emitLog('result.error = %s ' + result.message);
+          // TODO: alter callback data
+          // this.emitErrorLog(
+          //   'getblocktemplate call failed for daemon instance ' +
+          //     result.instance.index +
+          //     ' with error ' +
+          //     JSON.stringify(result.error)
+          // );
+          callback(result.message);
         } else {
-          let processedNewBlock = this.jobManager!.processTemplate(
-            result.response
+          let processedNewBlock = await this.jobManager!.processTemplate(
+            result
           );
-          callback(null, result.response, processedNewBlock);
+          callback(null, result, processedNewBlock);
           callback = function() {};
         }
       },
