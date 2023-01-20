@@ -41,7 +41,7 @@ function authorizeFn(
   callback
 ) {
   // Your Auth Handler
-  handlers.auth(port, workerName, password, function (authorized) {
+  handlers.auth(port, workerName, password, function(authorized) {
     var authString = authorized ? 'Authorized' : 'Unauthorized ';
     logger.debug(
       'AUTH>TRUE> authstr [%s] worker [%s] passwd [%s] ip [%s]',
@@ -150,7 +150,7 @@ function authorizeFn(
 
 | Property              | Type                                         |
 | --------------------- | -------------------------------------------- |
-| address               | string                                       |
+| address               | string // pool address                       |
 | api                   | any (optional)                               |
 | banning               | Banning (optional)                           |
 | blockRefreshInterval  | number                                       |

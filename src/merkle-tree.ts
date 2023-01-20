@@ -1,17 +1,11 @@
-import merkle from 'merkle-bitcoin';
+import denodeify from 'denodeify';
 import { reverseBuffer } from './utils';
 
-function _calcRoot(hashes: string[]): Promise<string> {
-  return new Promise((resolve, reject) => {
-    merkle(hashes, (err: any, merkleTree: any[]) => {
-      if (err) {
-        reject(err);
-      } else {
-        const result = Object.values(merkleTree)[2].root;
-        resolve(result);
-      }
-    });
-  });
+const merklebitcoin = denodeify(require('merkle-bitcoin'));
+
+function _calcRoot(hashes: string[]): string {
+  const result: Record<string, any> = merklebitcoin(hashes);
+  return Object.values(result)[2].root;
 }
 
 type Transaction = {
@@ -23,10 +17,7 @@ type RpcData = {
   transactions: Transaction[];
 };
 
-export async function getRoot(
-  rpcData: RpcData,
-  generateTxRaw: string
-): Promise<string> {
+export function getRoot(rpcData: RpcData, generateTxRaw: string): string {
   const hashes = [
     reverseBuffer(Buffer.from(generateTxRaw, 'hex')).toString('hex'),
   ];
@@ -42,6 +33,6 @@ export async function getRoot(
     return hashes[0];
   }
 
-  const result = await _calcRoot(hashes);
+  const result = _calcRoot(hashes);
   return result;
 }

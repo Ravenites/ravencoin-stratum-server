@@ -103,7 +103,7 @@ export class JobManager extends EventEmitter {
     return true;
   }
 
-  async updateCurrentJob(rpcData: RpcData) {
+  updateCurrentJob(rpcData: RpcData) {
     const tmpBlockTemplate = new BlockTemplate(
       this.jobCounter.next(),
       rpcData,
@@ -112,14 +112,12 @@ export class JobManager extends EventEmitter {
       this._options.address
     );
 
-    await tmpBlockTemplate.getRoot();
-
     this.currentJob = tmpBlockTemplate;
     this.emit('updatedBlock', tmpBlockTemplate, true);
     this.validJobs[tmpBlockTemplate.jobId] = tmpBlockTemplate;
   }
 
-  async processTemplate(rpcData: RpcData): Promise<boolean> {
+  processTemplate(rpcData: RpcData): boolean {
     let isNewBlock = typeof this.currentJob === 'undefined';
 
     if (
@@ -143,8 +141,6 @@ export class JobManager extends EventEmitter {
       this._options.recipients,
       this._options.address
     );
-
-    await tmpBlockTemplate.getRoot();
 
     this.currentJob = tmpBlockTemplate;
     this.validJobs = {};
@@ -187,7 +183,7 @@ export class JobManager extends EventEmitter {
     }
 
     const headerBuffer = job.serializeHeader();
-    const header_hash = reverseBuffer(sha256d(headerBuffer)).toString('hex');
+    let header_hash = reverseBuffer(sha256d(headerBuffer)).toString('hex');
 
     if (job.curTime < submitTime - 600) {
       return shareError([20, 'job is too old']);
@@ -385,9 +381,8 @@ export class JobManager extends EventEmitter {
           if (result === 'true') {
             const headerBigNum = new BigNumber(digest, 16);
             let blockDiffAdjusted = job.difficulty * this.shareMultiplier;
-            const shareDiff = new BigNumber(diff1)
-              .div(headerBigNum)
-              .multipliedBy(this.shareMultiplier);
+            const shareDiff =
+              (diff1 / headerBigNum.toNumber()) * this.shareMultiplier;
             const shareDiffFixed = shareDiff.toFixed(8);
 
             if (job.target.isGreaterThan(headerBigNum)) {

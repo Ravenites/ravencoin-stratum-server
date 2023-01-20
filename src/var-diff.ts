@@ -89,8 +89,9 @@ export class VarDiff extends EventEmitter {
       if (
         ts - lastRtc < this.varDiffOptions.retargetTime &&
         timeBuffer.size() > 0
-      )
+      ) {
         return;
+      }
       lastRtc = ts;
       let avg = timeBuffer.avg();
       let ddiff = this.varDiffOptions.targetTime / avg;

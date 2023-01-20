@@ -31,3 +31,9 @@ export type JobParams = [
   number, // rpcData heigth
   number | string // rpcData bits
 ];
+
+export type ClientHandleSubmit = {
+  id: number;
+  method: string;
+  params: string[];
+};

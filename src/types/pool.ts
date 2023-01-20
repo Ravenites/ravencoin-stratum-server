@@ -76,3 +76,11 @@ export type RelinquishMinersStratumClient = {
   subId: string;
   client: StratumClient;
 };
+
+export type PoolOnSubmit = {
+  name: string;
+  jobId: string;
+  nonce: string;
+  header: string;
+  mixhash: string;
+};

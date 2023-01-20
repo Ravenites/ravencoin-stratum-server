@@ -1,4 +1,4 @@
-const data = {
+export const data = {
   address: 'xxxxxx',
   blockRefreshInterval: 400,
   coin: {
@@ -82,4 +82,24 @@ const data = {
   testnet: true,
 };
 
-export default data;
+export function authorizeFn(
+  // @ts-ignore
+  remoteAddress: string | undefined,
+  // @ts-ignore
+  localPort: any,
+  // @ts-ignore
+  publicAddress: string,
+  // @ts-ignore
+  workerPass: string,
+  // @ts-ignore
+  extraNonce1: string | null,
+  // @ts-ignore
+  version: string | number | null,
+  cb: any
+) {
+  cb({
+    id: null,
+    authorized: true,
+    error: null,
+  });
+}

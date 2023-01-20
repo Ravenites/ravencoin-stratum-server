@@ -7,6 +7,7 @@ import { StratumClient, StratumServer } from './stratum';
 import {
   AuthorizeFn,
   Config,
+  PoolOnSubmit,
   PoolOptions,
   Recipient,
   RelinquishMinersStratumClient,
@@ -259,8 +260,48 @@ export class Pool extends EventEmitter {
     });
   }
 
-  // @ts-ignore
-  submitBlock(blockHex: string, callback: any) {}
+  submitBlock(blockHex: string, callback: any) {
+    let rpcCommand: string, rpcArgs: any[];
+    if (this._options.hasSubmitMethod) {
+      rpcCommand = 'submitblock';
+      rpcArgs = [blockHex];
+    } else {
+      rpcCommand = 'getblocktemplate';
+      rpcArgs = [{ mode: 'submit', data: blockHex }];
+    }
+
+    this.daemon!.cmd(rpcCommand, rpcArgs, (results: any) => {
+      for (var i = 0; i < results.length; i++) {
+        var result = results[i];
+        if (result.error || result.response === 'invalid-progpow') {
+          this.emitErrorLog(
+            'rpc error with daemon instance ' +
+              result.instance.index +
+              ' when submitting block with ' +
+              rpcCommand +
+              ' ' +
+              JSON.stringify(
+                result.error + '  result.response=' + result.response
+              )
+          );
+          return;
+        } else if (result.response === 'rejected') {
+          this.emitErrorLog(
+            'Daemon instance ' +
+              result.instance.index +
+              ' rejected a supposedly valid block'
+          );
+          return;
+        }
+      }
+      this.emitLog(
+        'Submitted Block using ' +
+          rpcCommand +
+          ' successfully to daemon instance(s)'
+      );
+      callback();
+    });
+  }
 
   setupRecipients() {
     const recipients: Recipient[] = [];
@@ -526,7 +567,7 @@ export class Pool extends EventEmitter {
               params
             ) => {}
           )
-          .on('submit', (params: any, resultCallback: any) => {
+          .on('submit', (params: PoolOnSubmit, resultCallback: any) => {
             this.jobManager!.processShare(
               params.jobId,
               client.previousDifficulty,
@@ -575,7 +616,6 @@ export class Pool extends EventEmitter {
             this.emitLog('Forgave banned IP ' + client.remoteAddress);
           })
           .on('unknownStratumMethod', (fullMessage: any) => {
-            console.log('fullMessage', fullMessage);
             this.emitLog(
               'Unknown stratum method from ' +
                 client.getLabel() +
@@ -645,21 +685,18 @@ export class Pool extends EventEmitter {
           rules: ['segwit'],
         },
       ],
-      async (result: any) => {
+      (result: any) => {
         if (result.code === 500) {
           this.emitLog('result.error = %s ' + result.message);
-          // TODO: alter callback data
-          // this.emitErrorLog(
-          //   'getblocktemplate call failed for daemon instance ' +
-          //     result.instance.index +
-          //     ' with error ' +
-          //     JSON.stringify(result.error)
-          // );
+          this.emitErrorLog(
+            'getblocktemplate call failed for daemon instance ' +
+              result.instance.index +
+              ' with error ' +
+              JSON.stringify(result.error)
+          );
           callback(result.message);
         } else {
-          let processedNewBlock = await this.jobManager!.processTemplate(
-            result
-          );
+          let processedNewBlock = this.jobManager!.processTemplate(result);
           callback(null, result, processedNewBlock);
           callback = () => {};
         }

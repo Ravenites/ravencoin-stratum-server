@@ -12,10 +12,10 @@ export class BlockTemplate {
   curTime: number = (Date.now() / 1000) | 0;
   difficulty: number;
   genTx?: string;
-  genTxHash?: string;
+  genTxHash: string;
   jobId: string;
-  merkleRoot?: string;
-  merkleRootReversed?: string;
+  merkleRoot: string;
+  merkleRootReversed: string;
   nTime: string;
   prevHashReversed: string;
   rewardFees: number;
@@ -30,7 +30,7 @@ export class BlockTemplate {
   localTarget: string;
   seedhash: string;
   epoch_number: number;
-  header_hash?: string;
+  header_hash: string;
 
   constructor(
     jobId: string,
@@ -68,15 +68,25 @@ export class BlockTemplate {
         poolAddress
       );
 
-      this.genTx = createTx.txHex;
+      // @ts-ignore
+      this.genTx = createTx.txHex.toString('hex');
       this.genTxHash = createTx.txHash;
+    } else {
+      // @ts-ignore
+      this.genTxHash = this.genTx.toString('hex');
     }
 
     this.prevHashReversed = reverseBuffer(
       Buffer.from(this.rpcData.previousblockhash, 'hex')
     ).toString('hex');
 
+    this.merkleRoot = getRoot(this.rpcData, this.genTxHash);
+
     this.txCount = this.rpcData.transactions.length + 1; // add total txs and new coinbase
+
+    this.merkleRootReversed = reverseBuffer(
+      Buffer.from(this.merkleRoot, 'hex')
+    ).toString('hex');
 
     const powLimit = algos.kawpow.diff;
     const adjPow = powLimit / this.difficulty;
@@ -101,24 +111,15 @@ export class BlockTemplate {
       this.seedhash = d.digest('hex');
     }
 
+    const header_hash = this.serializeHeader();
+    this.header_hash = reverseBuffer(sha256d(header_hash)).toString('hex');
+
     let override_target = 0;
     if (override_target !== 0 && adjPow > override_target) {
       zeroPad = '0';
       zeroPad = zeroPad.repeat(64 - override_target.toString(16).length);
       this.localTarget = (zeroPad + override_target.toString(16)).substr(0, 64);
     }
-  }
-
-  async getRoot() {
-    await getRoot(this.rpcData, this.genTxHash!).then(res => {
-      this.merkleRoot = res;
-      this.merkleRootReversed = reverseBuffer(
-        Buffer.from(this.merkleRoot, 'hex')
-      ).toString('hex');
-    });
-
-    const header_hash = this.serializeHeader();
-    this.header_hash = reverseBuffer(sha256d(header_hash)).toString('hex');
   }
 
   serializeHeader(): Buffer {
@@ -133,7 +134,7 @@ export class BlockTemplate {
 
     header.write(this.rpcData.bits, (position += 4), 4, 'hex');
     header.write(this.nTime, (position += 4), 4, 'hex');
-    header.write(this.merkleRoot!, (position += 4), 32, 'hex');
+    header.write(this.merkleRoot, (position += 4), 32, 'hex');
     header.write(this.rpcData.previousblockhash, (position += 32), 32, 'hex');
     // @ts-ignore TODO: Identify which offset is intended
     header.writeUInt32BE(this.rpcData.version, position + 32, 4);
@@ -179,7 +180,7 @@ export class BlockTemplate {
     if (!this.jobParams) {
       this.jobParams = [
         this.jobId,
-        this.header_hash!,
+        this.header_hash,
         this.seedhash,
         this.localTarget,
         true,

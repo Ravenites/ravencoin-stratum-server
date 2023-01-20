@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 import net from 'net';
 import tls from 'tls';
-import { AuthorizeFn, Banning, JobParams } from '../types';
+import { AuthorizeFn, Banning, ClientHandleSubmit, JobParams } from '../types';
 import { algos } from '../algo-properties';
 
 type Options = {
@@ -188,7 +188,7 @@ export class StratumClient extends EventEmitter {
     );
   }
 
-  handleSubmit(message: any) {
+  handleSubmit(message: ClientHandleSubmit) {
     if (!this.workerName) {
       this.workerName = this.getSafeWorkerString(message.params[0]);
     }
@@ -362,8 +362,8 @@ export class StratumClient extends EventEmitter {
   }
 
   manuallyAuthClient(username: string, password: string): void {
-    // this.handleAuthorize({ id: 1, params: [username, password] }, false);
-    this.handleAuthorize({ id: 1, params: [username, password] });
+    // @ts-ignore
+    this.handleAuthorize({ id: 1, params: [username, password] }, false);
   }
 
   manuallySetValues(otherClient: StratumClient) {

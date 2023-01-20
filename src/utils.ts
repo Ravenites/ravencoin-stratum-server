@@ -7,7 +7,7 @@ export function addressFromEx(
   ripdm160Key: string
 ): string | null {
   try {
-    let versionByte: Buffer = getVersionByte(exAddress);
+    let versionByte: Uint8Array = getVersionByte(exAddress);
     let addrBase: Buffer = Buffer.concat([
       versionByte,
       Buffer.from(ripdm160Key, 'hex'),
@@ -20,7 +20,7 @@ export function addressFromEx(
   }
 }
 
-export function getVersionByte(address: string): Buffer {
+export function getVersionByte(address: string): Uint8Array {
   return base58.decode(address).slice(0, 1);
 }
 
