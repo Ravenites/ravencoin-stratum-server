@@ -705,8 +705,25 @@ export class Pool extends EventEmitter {
     );
   }
 
-  // @ts-ignore
-  checkBlockAccepted(blockHash: string, callback: any) {}
+  checkBlockAccepted(blockHash: string, callback: any) {
+    this.daemon!.cmd('getblock', [blockHash], (results: any) => {
+      const res = Array.isArray(results) ? results : [results];
+      const validResults = res.filter((result: any) => {
+        return result && result.hash === blockHash;
+      });
+      if (validResults.length >= 1) {
+        if (validResults[0].confirmations >= 0) {
+          callback(true, validResults[0].tx[0]);
+        } else {
+          callback(false, {
+            confirmations: validResults[0].confirmations,
+          });
+        }
+        return;
+      }
+      callback(false, { unknown: 'check coin daemon logs' });
+    });
+  }
 
   processBlockNotify(blockHash: string, sourceTrigger: string): void {
     this.emitLog('Block notification via ' + sourceTrigger);
