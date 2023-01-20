@@ -11,9 +11,10 @@ import {
   Recipient,
   RelinquishMinersStratumClient,
   RpcData,
+  VarDiffOptions,
 } from './types';
 import { addressToScript, getReadableHashRateString } from './utils';
-import { VarDiff, VarDiffOptions } from './var-diff';
+import { VarDiff } from './var-diff';
 
 require('dotenv').config();
 
@@ -25,7 +26,7 @@ export class Pool extends EventEmitter {
   blockPollingIntervalId?: NodeJS.Timer;
   daemon?: DaemonInterface;
   progpow_wrapper: null = null;
-  jobManagerLastSubmitBlockHex: boolean = false;
+  jobManagerLastSubmitBlockHex?: string;
   jobManager?: JobManager;
   stratumServer?: StratumServer;
   varDiff: Record<string, VarDiff> = {};
@@ -292,14 +293,15 @@ export class Pool extends EventEmitter {
           this.stratumServer.broadcastMiningJobs(job);
         }
       })
-      .on('share', (shareData, blockHex) => {
+      .on('share', (shareData: any, blockHex: string) => {
         let isValidShare = !shareData.error;
         let isValidBlock = !!blockHex;
         const emitShare = () => {
           this.emit('share', isValidShare, isValidBlock, shareData);
         };
-        if (!isValidBlock) emitShare();
-        else {
+        if (!isValidBlock) {
+          emitShare();
+        } else {
           if (this.jobManagerLastSubmitBlockHex === blockHex) {
             this.emitWarningLog('Warning, ignored duplicate submit block');
           } else {
@@ -573,6 +575,7 @@ export class Pool extends EventEmitter {
             this.emitLog('Forgave banned IP ' + client.remoteAddress);
           })
           .on('unknownStratumMethod', (fullMessage: any) => {
+            console.log('fullMessage', fullMessage);
             this.emitLog(
               'Unknown stratum method from ' +
                 client.getLabel() +

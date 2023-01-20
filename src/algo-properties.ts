@@ -8,7 +8,12 @@ export const algos: Record<string, Algo> = {
     diff: parseInt(
       '0x00000000ff000000000000000000000000000000000000000000000000000000'
     ),
-    hash: () => '',
+    // @ts-ignore
+    hash: function() {
+      return function() {
+        return;
+      };
+    },
   },
 };
 

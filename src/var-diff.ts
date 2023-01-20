@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
 import { StratumClient } from './stratum';
+import { VarDiffOptions } from './types/var-diff';
 
 export class RingBuffer {
   data: number[] = [];
@@ -41,18 +42,9 @@ export class RingBuffer {
   }
 }
 
-export function toFixed(num: number, len: number) {
+function toFixed(num: number, len: number) {
   return parseFloat(num.toFixed(len));
 }
-
-export type VarDiffOptions = {
-  targetTime: number;
-  variancePercent: number;
-  retargetTime: number;
-  maxDiff: number;
-  minDiff: number;
-  x2mode?: boolean;
-};
 
 export class VarDiff extends EventEmitter {
   bufferSize: number;
@@ -80,44 +72,40 @@ export class VarDiff extends EventEmitter {
       console.error('Handling a client which is not of this vardiff?');
     }
 
-    let _this = this;
     let lastTimeStamp: number;
     let lastRtc: number;
     let timeBuffer: RingBuffer;
     client.on('submit', () => {
       let ts = (Date.now() / 1000) | 0;
       if (!lastRtc) {
-        lastRtc = ts - _this.varDiffOptions.retargetTime / 2;
+        lastRtc = ts - this.varDiffOptions.retargetTime / 2;
         lastTimeStamp = ts;
-        timeBuffer = new RingBuffer(_this.bufferSize);
+        timeBuffer = new RingBuffer(this.bufferSize);
         return;
       }
       let sinceLast = ts - lastTimeStamp;
       timeBuffer.append(sinceLast);
       lastTimeStamp = ts;
       if (
-        ts - lastRtc < _this.varDiffOptions.retargetTime &&
+        ts - lastRtc < this.varDiffOptions.retargetTime &&
         timeBuffer.size() > 0
       )
         return;
       lastRtc = ts;
       let avg = timeBuffer.avg();
-      let ddiff = _this.varDiffOptions.targetTime / avg;
-      if (
-        avg > _this.tMax &&
-        client.difficulty > _this.varDiffOptions.minDiff
-      ) {
-        if (_this.varDiffOptions.x2mode) {
+      let ddiff = this.varDiffOptions.targetTime / avg;
+      if (avg > this.tMax && client.difficulty > this.varDiffOptions.minDiff) {
+        if (this.varDiffOptions.x2mode) {
           ddiff = 0.5;
         }
-        if (ddiff * client.difficulty < _this.varDiffOptions.minDiff) {
-          ddiff = _this.varDiffOptions.minDiff / client.difficulty;
+        if (ddiff * client.difficulty < this.varDiffOptions.minDiff) {
+          ddiff = this.varDiffOptions.minDiff / client.difficulty;
         }
-      } else if (avg < _this.tMin) {
-        if (_this.varDiffOptions.x2mode) {
+      } else if (avg < this.tMin) {
+        if (this.varDiffOptions.x2mode) {
           ddiff = 2;
         }
-        let diffMax = _this.varDiffOptions.maxDiff;
+        let diffMax = this.varDiffOptions.maxDiff;
         if (ddiff * client.difficulty > diffMax) {
           ddiff = diffMax / client.difficulty;
         }
@@ -126,8 +114,7 @@ export class VarDiff extends EventEmitter {
       }
       let newDiff = toFixed(client.difficulty * ddiff, 8);
       timeBuffer.clear();
-      // TODO: test 'this' change to 'client'
-      client.emit('newDifficulty', client, newDiff);
+      this.emit('newDifficulty', client, newDiff);
     });
   }
 }

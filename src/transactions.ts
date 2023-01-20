@@ -58,7 +58,9 @@ export function createGeneration(
     feePercent = feePercent + recipients[i].percent;
   }
   let rewardToPool = Math.floor(blockReward * (1 - feePercent / 100));
+
   tx.addOutput(scriptCompile(poolAddrHash), rewardToPool);
+
   for (let i = 0; i < recipients.length; i++) {
     tx.addOutput(
       scriptCompile(

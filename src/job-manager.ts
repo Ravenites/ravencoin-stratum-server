@@ -25,6 +25,7 @@ export class JobManager extends EventEmitter {
 
     this._options = options;
     this.shareMultiplier = algos[options.coin.algorithm].multiplier;
+    // @ts-ignore
     this.hashDigest = algos[options.coin.algorithm].hash(options.coin);
 
     this.setupJobDaemonInterface(() => {});

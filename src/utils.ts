@@ -35,14 +35,11 @@ export function sha256d(buff: Buffer): Buffer {
 }
 
 export function reverseBuffer(buff: Buffer): Buffer {
-  let buffer = Buffer.alloc(buff.length);
-
-  for (let i = 0, j = buff.length - 1; i <= j; ++i, --j) {
-    buffer[i] = buff[j];
-    buffer[j] = buff[i];
+  const reversed = Buffer.alloc(buff.length);
+  for (let i = buff.length - 1; i >= 0; i--) {
+    reversed[buff.length - i - 1] = buff[i];
   }
-
-  return buffer;
+  return reversed;
 }
 
 export function reverseHex(hex: string): string {
