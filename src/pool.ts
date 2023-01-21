@@ -210,10 +210,11 @@ export class Pool extends EventEmitter {
     };
 
     checkSynced(() => {
-      if (!process.env.forkId || process.env.forkId === '0')
-        this.emitErrorLog(
-          'Daemon is still syncing with network (download blockchain) - server will be started once synced'
-        );
+      if (!process.env.forkId || process.env.forkId === '0') {
+        const err =
+          'Daemon is still syncing with network (download blockchain) - server will be started once synced';
+        this.emitErrorLog(err);
+      }
     });
 
     const generateProgress = () => {
@@ -223,11 +224,10 @@ export class Pool extends EventEmitter {
           return b.blocks - a.blocks;
         })[0].blocks;
         this.daemon!.cmd('getpeerinfo', [], (results: any) => {
-          const res = Array.isArray(results) ? results : [results];
-          let peers = res[0];
-          let totalBlocks = peers.sort((a: any, b: any) => {
-            return b.startingheight - a.startingheight;
-          })[0].startingheight;
+          const peers = Array.isArray(results) ? results : [results];
+          let totalBlocks = peers.sort(
+            (a: any, b: any) => b.startingheight - a.startingheight
+          )[0].startingheight;
           let percent = ((blockCount / totalBlocks) * 100).toFixed(2);
           this.emitWarningLog(
             'Downloaded ' +
@@ -503,7 +503,6 @@ export class Pool extends EventEmitter {
   startStratumServer(finishedCallback: any) {
     const _this = this;
     this.stratumServer = new StratumServer(this._options, this._authorizeFn);
-
     this.stratumServer
       .on('started', () => {
         this._options.initStats.stratumPorts = Object.keys(
