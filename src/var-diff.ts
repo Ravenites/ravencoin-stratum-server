@@ -62,13 +62,13 @@ export class VarDiff extends EventEmitter {
       (varDiffOptions.retargetTime / varDiffOptions.targetTime) * 4;
     this.tMin = varDiffOptions.targetTime - variance;
     this.tMax = varDiffOptions.targetTime + variance;
-    this.port = port;
+    this.port = Number(port);
     this.varDiffOptions = varDiffOptions;
   }
 
   manageClient(client: StratumClient): void {
-    let stratumPort = client.socket.localPort;
-    if (stratumPort !== this.port) {
+    let stratumPort = Number(client.socket.localPort);
+    if (Number(stratumPort) !== Number(this.port)) {
       console.error('Handling a client which is not of this vardiff?');
     }
 

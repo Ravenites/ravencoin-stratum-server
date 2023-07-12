@@ -51,9 +51,11 @@ export class BlockTemplate {
     const blockReward = this.rpcData.coinbasevalue;
     const fees: number[] = [];
 
-    this.rpcData.transactions.forEach((value: any) => {
-      fees.push(value);
-    });
+    if (Array.isArray(this.rpcData.transactions)) {
+      this.rpcData.transactions.forEach((value: any) => {
+        fees.push(value);
+      });
+    }
 
     this.rewardFees = getFees(fees);
 

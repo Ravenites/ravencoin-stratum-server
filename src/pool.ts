@@ -105,7 +105,7 @@ export class Pool extends EventEmitter {
   getFirstJob(finishedCallback: any) {
     this.getBlockTemplate(
       (
-        error: any,
+        error: string | null,
         // @ts-ignore
         result: any
       ) => {
@@ -361,7 +361,7 @@ export class Pool extends EventEmitter {
                   this.getBlockTemplate(
                     (
                       // @ts-ignore
-                      error: any,
+                      error: string | null,
                       // @ts-ignore
                       result: any,
                       foundNewBlock: boolean
@@ -520,8 +520,10 @@ export class Pool extends EventEmitter {
             ' seconds - updating transactions & rebroadcasting work'
         );
         this.getBlockTemplate(
-          async (error: any, rpcData: RpcData, processedBlock: boolean) => {
-            if (error || processedBlock) return;
+          async (error: string | null, rpcData: RpcData, processedBlock: boolean) => {
+            if (error || processedBlock) {
+              return;
+            };
             await this.jobManager!.updateCurrentJob(rpcData);
           }
         );
@@ -662,7 +664,7 @@ export class Pool extends EventEmitter {
       this.getBlockTemplate(
         (
           // @ts-ignore
-          error: any,
+          error: string | null,
           // @ts-ignore
           result: any,
           foundNewBlock: boolean
@@ -695,7 +697,7 @@ export class Pool extends EventEmitter {
           );
           callback(result.message);
         } else {
-          let processedNewBlock = this.jobManager!.processTemplate(result);
+          const processedNewBlock = this.jobManager!.processTemplate(result);
           callback(null, result, processedNewBlock);
           callback = () => {};
         }
