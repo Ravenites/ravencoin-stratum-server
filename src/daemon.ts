@@ -48,7 +48,7 @@ export class DaemonInterface extends EventEmitter {
         typeof instance.host === 'undefined' ? '127.0.0.1' : instance.host,
       port: instance.port,
       method: 'POST',
-      auth: instance.user + ':' + instance.password,
+      auth: instance.username + ':' + instance.password,
       headers: {
         'Content-Length': jsonData.length,
       },
@@ -113,9 +113,12 @@ export class DaemonInterface extends EventEmitter {
     const promises = [];
 
     const client = new Client({
-      url: `${this._daemons[0].host}:${this._daemons[0].port}`,
-      username: this._daemons[0].user,
+      url:
+        this._daemons[0].url ||
+        `${this._daemons[0].host}:${this._daemons[0].port}`,
+      username: this._daemons[0].username,
       password: this._daemons[0].password,
+      headers: this._daemons[0].headers,
     });
 
     for (var i = 0; i < cmdArray.length; i++) {
@@ -142,9 +145,10 @@ export class DaemonInterface extends EventEmitter {
       const results: any[] = [];
       this._daemons.forEach(async daemon => {
         const client = new Client({
-          url: `${daemon.host}:${daemon.port}`,
-          username: daemon.user,
+          url: daemon.url || `${daemon.host}:${daemon.port}`,
+          username: daemon.username,
           password: daemon.password,
+          headers: daemon.headers,
         });
         const res = await client.request(method, params);
         results.push(res);
@@ -152,9 +156,12 @@ export class DaemonInterface extends EventEmitter {
       callback(results);
     } else {
       const client = new Client({
-        url: `${this._daemons[0].host}:${this._daemons[0].port}`,
-        username: this._daemons[0].user,
+        url:
+          this._daemons[0].url ||
+          `${this._daemons[0].host}:${this._daemons[0].port}`,
+        username: this._daemons[0].username,
         password: this._daemons[0].password,
+        headers: this._daemons[0].headers,
       });
       client
         .request(method, params)

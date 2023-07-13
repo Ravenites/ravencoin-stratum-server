@@ -1,8 +1,9 @@
-export type Daemon = {
-  host: string;
-  port: number;
-  user: string;
-  password: string;
+import { Config } from '@hyperbitjs/rpc';
+
+export type Daemon = Omit<Config, 'url'> & {
+  url?: string;
+  host?: string;
+  port?: number;
 };
 
 export type Kawpowhash = {

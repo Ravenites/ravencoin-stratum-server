@@ -2,17 +2,21 @@ export type AuthorizeFn = (
   remoteAddress: string | undefined, // ip address
   localPort: number | undefined,
   address: string, // workerName xxxxxxxxx.x
-  worderPassword: string,
+  workerPassword: string,
   extraNonce1: string | null,
   version: number | string | null,
   cb: AuthorizeFnCallback
 ) => void;
 
-type AuthorizeFnCallback = (
-  error: any,
-  authorized: boolean,
-  disconnect: boolean
-) => void;
+export type AuthorizeFnCallback = ({
+  error,
+  authorized,
+  disconnect,
+}: {
+  error: any;
+  authorized: boolean;
+  disconnect: boolean;
+}) => void;
 
 export type Banning = {
   checkThreshold: number;

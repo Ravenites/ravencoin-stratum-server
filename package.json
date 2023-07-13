@@ -1,5 +1,5 @@
 {
-  "version": "0.5.3",
+  "version": "0.6.0",
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -19,7 +19,6 @@
     "size": "size-limit",
     "analyze": "size-limit --why"
   },
-  "peerDependencies": {},
   "husky": {
     "hooks": {
       "pre-commit": "tsdx lint"
@@ -60,7 +59,7 @@
     "typescript": "^4.9.4"
   },
   "dependencies": {
-    "@hyperbitjs/rpc": "^0.1.0",
+    "@hyperbitjs/rpc": "^0.2.2",
     "async": "^3.2.4",
     "base-58": "^0.0.1",
     "bignumber.js": "^9.1.1",

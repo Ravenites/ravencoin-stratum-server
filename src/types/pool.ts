@@ -5,7 +5,7 @@ import { Banning } from './stratum';
 
 export type Config = {
   address: string;
-  api?: any;
+  api?: any; // object|function
   banning?: Banning;
   blockRefreshInterval: number;
   coin: Coin;
@@ -16,7 +16,7 @@ export type Config = {
   kawpow_validator?: string;
   kawpow_wrapper_host?: string;
   kawpow_wrapper_port?: number;
-  p2p: P2p;
+  p2p: P2P;
   ports: Record<string, Port>;
   rewardRecipients: Record<string, number>; // address: percentage
   tcpProxyProtocol: boolean;
@@ -57,7 +57,7 @@ type InitStats = {
   stratumPorts?: number[];
 };
 
-type P2p = {
+type P2P = {
   enabled?: boolean;
   host: string;
   port: number;

@@ -173,15 +173,15 @@ export class StratumClient extends EventEmitter {
       this.workerPass,
       this.extraNonce1,
       this.version,
-      result => {
-        this.authorized = !result.error && result.authorized;
+      ({ error, authorized, disconnect }) => {
+        this.authorized = !error && authorized;
         this.sendJson({
           id: message.id,
           result: this.authorized,
-          error: result.error,
+          error: error,
         });
         this.emit('authorization');
-        if (result.disconnect === true) {
+        if (disconnect === true) {
           this.socket.destroy();
         }
       }
